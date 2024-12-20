@@ -11,6 +11,7 @@ namespace Jworkz.ResoniteAnimJRhapsody.Core.Patches;
 
 using Jworkz.ResoniteAnimJRhapsody.Core.Events.Watchers;
 using Readers;
+using ResoniteModLoader;
 
 [HarmonyPatch(typeof(AnimJImporter))]
 internal static class AnimJImporterPatch
@@ -37,6 +38,7 @@ internal static class AnimJImporterPatch
   [HarmonyPatch(nameof(AnimJImporter.ImportFromJSON))]
   private static bool ImportFromJSONPrefix(ref AnimX __result, string json)
   {
+
     var localUser = Engine.Current.WorldManager.FocusedWorld.LocalUser;
 
     using var reader = new AnimJReader(json, localUser);

@@ -14,7 +14,7 @@ namespace Jworkz.ResoniteAnimJRhapsody.Core;
 
 public static class BuildInfo
 {
-  public const string Name = "[Jworkz] AnimJ Rhapsody | Core";
+  public const string Name = "AnimJ Rhapsody | Core";
 
   public const string Author = "Stiefel Jackal";
 
