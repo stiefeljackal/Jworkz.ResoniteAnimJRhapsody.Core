@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,9 +21,7 @@ public class AnimJReader : IDisposable
 
   private const string FILE_TYPE = "AnimJ";
 
-  private const byte START_AT_SECOND = 7;
-
-  private const byte REPORT_INTERNAL_IN_SECONDS = 2;
+  private const float REPORT_INTERNAL_IN_SECONDS = 0.5f;
 
   private Stream _stream;
 
@@ -54,11 +53,7 @@ public class AnimJReader : IDisposable
 
   public AnimJReader(string json, User allocatingUser) : this(allocatingUser)
   {
-    _stream = new MemoryStream();
-
-    var writer = new StreamWriter(_stream);
-    writer.Write(json);
-    _stream.Position = 0;
+    _stream = new MemoryStream(Encoding.UTF8.GetBytes(json ?? string.Empty));
   }
 
   public AnimJReader(Stream stream, User allocatingUser) : this(allocatingUser)
@@ -73,6 +68,7 @@ public class AnimJReader : IDisposable
     try
     {
       var animation = JsonSerializer.Deserialize<Animation>(_stream, options);
+
       return Finish(animation);
     }
     catch (Exception ex)
@@ -89,7 +85,7 @@ public class AnimJReader : IDisposable
 
     try
     {
-      var animation = await JsonSerializer.DeserializeAsync<Animation>(_stream, options);
+      var animation = await JsonSerializer.DeserializeAsync<Animation>(_stream, options).ConfigureAwait(false);
       return Finish(animation);
 
     }
@@ -104,14 +100,14 @@ public class AnimJReader : IDisposable
 
   private void Start()
   {
+    ImportStart?.Invoke(this, new ImportStartEventArgs(_allocatingUser, ImportId, FILE_TYPE, BufferLength));
     if (BufferLength < MIN_BYTES_TO_REPORT) { return; }
 
     _progressTimer = new Timer((object _) =>
     {
       ImportProgress?.Invoke(this, new ImportProgressEventArgs(_allocatingUser, ImportId, FILE_TYPE, BufferLength, ConsumedBytes));
-    }, FILE_TYPE, TimeSpan.FromSeconds(START_AT_SECOND), TimeSpan.FromSeconds(REPORT_INTERNAL_IN_SECONDS));
+    }, FILE_TYPE, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(REPORT_INTERNAL_IN_SECONDS));
 
-    ImportStart?.Invoke(this, new ImportStartEventArgs(_allocatingUser, ImportId, FILE_TYPE, BufferLength));
   }
 
   private AnimX Finish(Animation animation)
